@@ -158,7 +158,14 @@ select * from delivery_data dd;
 SELECT 
     oi.id,
     user1.name AS name_user,
-    SUM(op.fee_price + pr.price) AS total_price,
+    MAX(pr.price) as product_price,
+    SUM(op.fee_price)+MAX(pr.price) AS total_price,
+    SUM(case when op.fee_type_id = 1 then op.fee_price else null end) as delivery_fee ,
+    SUM (case when op.fee_type_id = 2 then op.fee_price else null end) as platform_fee,
+    SUM(case when op.fee_type_id = 3 then op.fee_price else null end  ) as insurance_fee,
+    SUM(case when op.fee_type_id = 4 then op.fee_price else null end )as tax_fee,
+    SUM(case when op.fee_type_id = 5 then op.fee_price else null end )as transaction_fee,
+    s."name" as seller,
     p.amount AS payment_amount,
     pt.name AS payment_type,
     dv.name AS delivery_vendor_name,
@@ -172,14 +179,17 @@ JOIN payment_type pt ON p.payment_type_id = pt.id
 JOIN status_payment sp ON p.status_id = sp.id
 JOIN product pr ON pr.id = oi.product_id
 JOIN seller s ON pr.seller_id = s.id
-JOIN user_address ua ON ua.user_id = user1.id
+JOIN user_address ua ON ua.id = oi.address_id 
 JOIN delivery_data dd ON dd.order_id = oi.id  -- Changed this line
 JOIN delivery_vendor dv ON dd.vendor_id = dv.id
 GROUP BY 
     oi.id,
+    s."name",
     user1.name,
     p.amount,
     pt.name,
     dv.name,
     ua.street_name,
     dd.status;
+
+    
